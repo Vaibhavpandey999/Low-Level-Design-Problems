@@ -1,0 +1,118 @@
+spring:
+  # ─────────────────────────────────────────────
+  # APPLICATION NAME – used by Actuator & logs
+  # ─────────────────────────────────────────────
+  application:
+    name: bookmyshow-service
+
+  # ─────────────────────────────────────────────
+  # POSTGRESQL DATA SOURCE
+  # ─────────────────────────────────────────────
+  datasource:
+    url: jdbc:postgresql://localhost:5432/bookmyshow          # PostgreSQL connection URL
+    username: postgres                                         # DB username
+    password: password                                         # DB password (use env var in prod)
+    driver-class-name: org.postgresql.Driver                   # JDBC driver class
+    hikari:
+      maximum-pool-size: 20                                    # Max connections in HikariCP pool
+      minimum-idle: 5                                          # Minimum idle connections
+      connection-timeout: 30000                                # Max wait time for a connection (ms)
+
+  # ─────────────────────────────────────────────
+  # JPA / HIBERNATE
+  # ─────────────────────────────────────────────
+  jpa:
+    hibernate:
+      ddl-auto: update                                         # Auto-create/update schema; use 'validate' in prod
+    show-sql: true                                             # Log SQL to console (disable in prod)
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect       # Tell Hibernate to generate PostgreSQL SQL
+        format_sql: true                                       # Pretty-print SQL in logs
+
+  # ─────────────────────────────────────────────
+  # REDIS
+  # ─────────────────────────────────────────────
+  data:
+    redis:
+      host: localhost                                          # Redis server hostname
+      port: 6379                                               # Redis server port
+      password:                                                # Redis auth password (leave blank if none)
+      lettuce:
+        pool:
+          max-active: 10                                       # Max active Lettuce connections
+          max-idle: 5                                          # Max idle connections
+          min-idle: 1                                          # Min idle connections
+    # ─────────────────────────────────────────────
+    # ELASTICSEARCH
+    # ─────────────────────────────────────────────
+    elasticsearch:
+      uris: http://localhost:9200                              # ES REST endpoint
+      username: elastic                                        # ES username (remove if no auth)
+      password: changeme                                       # ES password
+
+  # ─────────────────────────────────────────────
+  # KAFKA
+  # ─────────────────────────────────────────────
+  kafka:
+    bootstrap-servers: localhost:9092                          # Kafka broker address
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer        # Key serializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer  # Value as JSON
+      acks: all                                                # Wait for all replicas to ack (durability)
+      retries: 3                                               # Retry on transient failures
+    consumer:
+      group-id: bookmyshow-group                               # Consumer group id
+      auto-offset-reset: earliest                              # Start from beginning on new group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.bookmyshow.kafka.events"  # Trust these packages for deserialization
+
+  # ─────────────────────────────────────────────
+  # CACHE
+  # ─────────────────────────────────────────────
+  cache:
+    type: redis                                                # Use Redis as cache backend
+
+# ─────────────────────────────────────────────
+# SERVER
+# ─────────────────────────────────────────────
+server:
+  port: 8080                                                   # Embedded Tomcat port
+
+# ─────────────────────────────────────────────
+# JWT CONFIGURATION (custom property)
+# ─────────────────────────────────────────────
+jwt:
+  secret: "BookMyShow_Super_Secret_Key_32_Chars_Min_Here!"     # HS256 signing secret (use env var in prod)
+  expiration-ms: 86400000                                      # Token validity: 24 hours in ms
+
+# ─────────────────────────────────────────────
+# SEAT LOCK CONFIGURATION (custom property)
+# ─────────────────────────────────────────────
+seat:
+  lock:
+    ttl-minutes: 10                                            # Seat hold expires after 10 minutes
+
+# ─────────────────────────────────────────────
+# SPRINGDOC / SWAGGER
+# ─────────────────────────────────────────────
+springdoc:
+  api-docs:
+    path: /api-docs                                            # Raw OpenAPI JSON endpoint
+  swagger-ui:
+    path: /swagger-ui.html                                     # Swagger UI URL
+
+# ─────────────────────────────────────────────
+# ACTUATOR
+# ─────────────────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus               # Expose these actuator endpoints
+  endpoint:
+    health:
+      show-details: always                                     # Show full health details
+
