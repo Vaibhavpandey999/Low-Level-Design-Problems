@@ -1,0 +1,63 @@
+## ===================================================================
+## Car Rental Service – Application Configuration
+## ===================================================================
+## This file contains environment-agnostic settings.
+## Environment-specific values (DB URL, passwords) go in application-dev.yml
+## ===================================================================
+
+spring:
+  application:
+    name: car-rental-service       # service name used in logs and actuator info
+
+  ## Active profile selects the right application-{profile}.yml
+  profiles:
+    active: dev                    # override with -Dspring.profiles.active=prod for production
+
+  ## Jackson – serialize LocalDate/LocalDateTime as ISO strings (not timestamps)
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false  # "2025-06-01" instead of epoch milliseconds
+    time-zone: UTC                       # all dates stored and returned in UTC
+
+  ## JPA / Hibernate
+  jpa:
+    hibernate:
+      ddl-auto: validate           # validate schema against Flyway migrations; never auto-create
+    show-sql: false                # set to true in dev for SQL debugging
+    open-in-view: false            # disable OSIV – prevents accidental lazy loading in controllers
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect  # PostgreSQL-specific SQL generation
+        format_sql: true           # pretty-print SQL in logs when show-sql=true
+
+  ## Flyway – database migration
+  flyway:
+    enabled: true                  # run pending migrations on startup
+    baseline-on-migrate: true      # create flyway_schema_history if it doesn't exist
+    locations: classpath:db/migration  # migration scripts location
+
+## ===================================================================
+## Application-specific settings
+## ===================================================================
+app:
+  jwt:
+    ## Secret key for HMAC-SHA256 JWT signing
+    ## Must be at least 256 bits (32 bytes) when Base64-decoded
+    ## CHANGE THIS in production – use a strong random value from a secrets manager
+    secret: ZGV2LXNlY3JldC1rZXktZm9yLWNhci1yZW50YWwtc2VydmljZS0yMDI1  # Base64 encoded
+
+    ## Token validity: 24 hours in milliseconds
+    expiration-ms: 86400000
+
+## ===================================================================
+## Spring Actuator – health and monitoring endpoints
+## ===================================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics  # expose only these endpoints (not env/beans in prod)
+  endpoint:
+    health:
+      show-details: when-authorized   # full health details only for authenticated requests
+

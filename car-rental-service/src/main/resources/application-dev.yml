@@ -1,0 +1,60 @@
+## ===================================================================
+## Car Rental Service – DEV Profile Configuration
+## ===================================================================
+## Loaded when spring.profiles.active=dev
+## Contains local infrastructure connection strings
+## NEVER commit real secrets to version control – use .env or secrets manager
+## ===================================================================
+
+spring:
+
+  ## ── PostgreSQL Database ──────────────────────────────────────────
+  datasource:
+    url: jdbc:postgresql://localhost:5432/carrentaldb   # local PostgreSQL instance
+    username: postgres                                   # DB username
+    password: postgres                                   # DB password (use secrets manager in prod)
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10         # max DB connections in the HikariCP pool
+      minimum-idle: 2               # keep minimum 2 idle connections
+      connection-timeout: 30000     # wait max 30s for a connection from pool
+
+  ## ── Redis ────────────────────────────────────────────────────────
+  data:
+    redis:
+      host: localhost               # Redis server hostname
+      port: 6379                    # default Redis port
+      timeout: 2000ms               # connection timeout
+
+    ## ── Elasticsearch ─────────────────────────────────────────────
+    elasticsearch:
+      uris: http://localhost:9200   # Elasticsearch node URL
+
+  ## ── Kafka ────────────────────────────────────────────────────────
+  kafka:
+    bootstrap-servers: localhost:9092   # Kafka broker address
+    consumer:
+      group-id: car-rental-service      # consumer group ID for this service
+      auto-offset-reset: earliest       # start consuming from the beginning of topic on first run
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.carrental.kafka.events"  # whitelist event classes
+
+  ## ── Cache (Redis) ─────────────────────────────────────────────────
+  cache:
+    type: redis                         # use Redis as the cache provider
+    redis:
+      time-to-live: 3600000             # default cache TTL: 1 hour (milliseconds)
+
+## ── Logging ────────────────────────────────────────────────────────
+logging:
+  level:
+    com.carrental: DEBUG                # verbose logging for our packages in dev
+    org.hibernate.SQL: DEBUG           # show SQL queries
+    org.springframework.security: DEBUG # show security decisions
+
+## ── Server ─────────────────────────────────────────────────────────
+server:
+  port: 8080                           # HTTP port
+
